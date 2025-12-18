@@ -408,7 +408,7 @@ def display_model():
 
       
             # API 미사용 시 기본 매핑만 사용
-            for i, box in enumerate(detections):
+            for box in detections:
                 class_id = int(box.cls[0])
                 confidence = float(box.conf[0])
 
@@ -416,17 +416,18 @@ def display_model():
                 if class_mapping and class_id in class_mapping:
                     drug_info = class_mapping[class_id]
                     class_name = drug_info.get("item_name", f"이름 없음 (ID : {class_id})")
+                    dl_idx = drug_info.get("dl_idx", "정보 없음")
                 else:
                     # 모델 기본 이름이 있으면 사용 , 없으면 ID 표시 (Fallback)
                     class_name = model.names.get(
                         class_id, f"알 수 없는 약물 (ID : {class_id})"
                     )
+                    dl_idx = "정보 없음"
 
                 detection_data.append(
                     {
-                        "번호": i + 1,
+                        "약 인덱스": dl_idx,
                         "약물명": class_name,
-                        "클래스 ID": class_id,
                         "신뢰도": f"{confidence:.2%}",
                     }
                 )
