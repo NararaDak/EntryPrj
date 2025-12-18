@@ -551,7 +551,7 @@ def display_model():
                 # GPT API 키 입력창
                 API = st.text_input(
                     "GPT API 키를 입력하세요",
-                    value= st.secrets["OPENAI_API_KEY"]
+                    value= st.secrets["OPENAI_API_KEY"],
                     type="password",
                     help="OpenAI API 키를 입력해주세요",
                 )
