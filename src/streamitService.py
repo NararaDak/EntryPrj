@@ -4,7 +4,6 @@ import streamit_modelStudy
 import streamit_edastudy
 import streamit_edaexecute
 import streamit_modelexecute
-import gpt_prompt_app1
 
 # 페이지 전체 레이아웃 및 폰트/탭 크기 스타일 적용
 st.set_page_config(layout="wide")
@@ -74,6 +73,6 @@ with tab4:
 with tab5:
     st.header("모델 시연 탭")
     try:
-        gpt_prompt_app1.display_model()
+        streamit_modelexecute.display_model()
     except Exception:
-        st.info("streamit_modelexecute.py의 display_model_execute()를 구현하세요.")
+        st.info("streamit_modelexecute.py의 display_model()를 구현하세요.")
