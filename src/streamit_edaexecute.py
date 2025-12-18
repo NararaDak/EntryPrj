@@ -722,8 +722,9 @@ def display_train_image(rows=2, cols=2):
           cols_list[c].empty()
 
 def display_eda():
-  train_image_dir =   r"D:\01.project\EntryPrj\data\eda\noImage_okAnno\train_images" # 실제 경로로 변경하세요
-  train_annotation_dir = r"D:\01.project\EntryPrj\data\eda\noImage_okAnno\train_annotations" #
+  base_dir = "./data/traindata"
+  train_image_dir =   f"{base_dir}/train_images" # 실제 경로로 변경하세요
+  train_annotation_dir = f"{base_dir}/train_annotations" #
   MyData.load_anotation(train_image_dir, train_annotation_dir)
   rows, cols = 3, 10
   display_train_image(rows=rows, cols=cols)
