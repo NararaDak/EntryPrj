@@ -14,7 +14,7 @@ from openai import OpenAI
 
 # 매핑 함수 로드
 @st.cache_data  # 캐싱을 통해 한번만 로드하도록 설정
-def load_class_mapping(mapping_file="yolo_class_mapping.json"):
+def load_class_mapping(mapping_file="./files/yolo_class_mapping.json"):
     """yolo_class_mapping.json 파일을 로드하여 클래스 ID 와 약물 정보를 매핑합니다."""
     try:
         with open(mapping_file, "r", encoding="utf-8") as f:
@@ -37,7 +37,7 @@ def load_class_mapping(mapping_file="yolo_class_mapping.json"):
 
 # 약물 API 데이터 로드 함수
 @st.cache_data  # 캐싱을 통해 한번만 로드하도록 설정
-def load_drug_api_data(api_data_file="drug_API_info.json"):
+def load_drug_api_data(api_data_file="./files/drug_API_info.json"):
     """drug_API_info.json 파일을 로드하여 약물 상세 정보를 가져옵니다."""
     try:
         with open(api_data_file, "r", encoding="utf-8") as f:
@@ -110,7 +110,7 @@ def display_model():
     if model_option == "기본 모델 사용":
         # model 폴더에서 .pt 파일 찾기
         model_dir = (
-            "../model"  # EntryPrj/model 디렉토리를 가리킴
+            "./model"
             # "/content/drive/MyDrive/Project-Team-1/data/yolo_results/yolov8n_train/weights" # Colab 부분
         )
 
