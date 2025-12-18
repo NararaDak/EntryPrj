@@ -453,12 +453,17 @@ def display_model():
 
                     if st.button("1단계: 검출된 약물 분석 시작", type="primary"):
                         with st.spinner("GPT가 약물을 분석하는 중..."):
-                            # GPT Prompt step 1 : 검출 이미지 분석
-                            step1_result = create_drug_interaction_prompt_step1(
-                                client, detected_drug_names
-                            )
-                            # 세션에 저장 (초기화 방지)
-                            st.session_state["step1_result"] = step1_result
+                            try:
+                                # GPT Prompt step 1 : 검출 이미지 분석
+                                step1_result = create_drug_interaction_prompt_step1(
+                                    client, detected_drug_names
+                                )
+                                # 세션에 저장 (초기화 방지)
+                                st.session_state["step1_result"] = step1_result
+                            except Exception as e:
+                                st.error(f"1단계 분석 중 오류 발생: {str(e)}")
+                                import traceback
+                                st.code(traceback.format_exc())
 
                     # Step1 결과 표시
                     if "step1_result" in st.session_state:
@@ -506,12 +511,17 @@ def display_model():
                         # 증상 입력 여부와 관계없이 분석 버튼 표시
                         if st.button("2단계: 맞춤형 복약 분석 시작", type="secondary"):
                             with st.spinner("사용자 정보와 약물을 분석하는 중..."):
-                                step2_result = create_drug_interaction_prompt_step2(
-                                    client, symptoms, detected_drug_names, user_profile, drug_api_data
-                                )
-                                # 세션에 저장
-                                st.session_state["step2_result"] = step2_result
-                                st.session_state["step2_symptoms"] = symptoms  # 증상도 저장
+                                try:
+                                    step2_result = create_drug_interaction_prompt_step2(
+                                        client, symptoms, detected_drug_names, user_profile, drug_api_data
+                                    )
+                                    # 세션에 저장
+                                    st.session_state["step2_result"] = step2_result
+                                    st.session_state["step2_symptoms"] = symptoms  # 증상도 저장
+                                except Exception as e:
+                                    st.error(f"2단계 분석 중 오류 발생: {str(e)}")
+                                    import traceback
+                                    st.code(traceback.format_exc())
 
                         # Step2 결과 표시
                         if "step2_result" in st.session_state:
