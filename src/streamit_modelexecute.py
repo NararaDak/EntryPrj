@@ -38,15 +38,37 @@ def load_class_mapping(mapping_file="./files/yolo_class_mapping.json"):
 # 약물 API 데이터 로드 함수
 @st.cache_data  # 캐싱을 통해 한번만 로드하도록 설정
 def load_drug_api_data(api_data_file="./files/drug_API_info.json"):
-    """drug_API_info.json 파일을 로드하여 약물 상세 정보를 가져옵니다."""
+    """drug_API_info.json 파일을 로드하여 약물 상세 정보를 가져옵니다.
+
+    Returns:
+        dict: 약물명을 키로 하는 딕셔너리 형태로 반환 (빠른 검색을 위해)
+              예: {"뮤테란캡슐100밀리그램(아세틸시스테인)": {...약물정보...}, ...}
+    """
     try:
         with open(api_data_file, "r", encoding="utf-8") as f:
-            api_data = json.load(f)
+            api_data_list = json.load(f)
+
+        # 배열을 딕셔너리로 변환 (약물명을 키로 사용)
+        # 약물명으로 빠르게 검색할 수 있도록 최적화
+        api_data_dict = {}
+        for item in api_data_list:
+            item_name = item.get('itemName', '')
+            if item_name:
+                # 약물명을 키로 저장
+                api_data_dict[item_name] = item
+
+                # 약물명에서 괄호 앞 부분만 추출하여 추가 키로 등록 (더 유연한 검색)
+                # 예: "뮤테란캡슐100밀리그램(아세틸시스테인)" -> "뮤테란캡슐100밀리그램"도 키로 등록
+                if '(' in item_name:
+                    short_name = item_name.split('(')[0].strip()
+                    if short_name and short_name not in api_data_dict:
+                        api_data_dict[short_name] = item
+
         st.sidebar.success(
-            f"한국의약품안전나라 API 데이터 로드 완료\n\n"
-            f"{len(api_data)}개 약물 상세 정보 ({api_data_file})"
+            f"식품의약품안전처 의약품개요정보(e약은요) 데이터 로드 완료\n\n"
+            f"{len(api_data_list)}개 약물 상세 정보 ({api_data_file})"
         )
-        return api_data
+        return api_data_dict
 
     except FileNotFoundError:
         st.sidebar.warning(
@@ -239,14 +261,20 @@ def display_model():
         # API 데이터가 있는 경우 상세 약물 정보 추가
         detailed_drug_info = ""
         if drug_api_data:
-            detailed_drug_info = "\n## 4. 약물 상세 정보 (한국의약품안전나라 API):\n"
+            detailed_drug_info = "\n## 4. 약물 상세 정보 (식품의약품안전처 의약품개요정보):\n"
             for drug_name in detected_drug_names:
-                # 약물명으로 API 데이터 검색
+                # 딕셔너리에서 약물명으로 직접 검색 (O(1) 시간복잡도)
                 drug_info = None
-                for item in drug_api_data:
-                    if drug_name in item.get('itemName', ''):
-                        drug_info = item
-                        break
+
+                # 1차 시도: 정확한 약물명으로 검색
+                if drug_name in drug_api_data:
+                    drug_info = drug_api_data[drug_name]
+                else:
+                    # 2차 시도: 부분 매칭 (약물명에 검출된 이름이 포함된 경우)
+                    for api_drug_name, api_drug_info in drug_api_data.items():
+                        if drug_name in api_drug_name or api_drug_name in drug_name:
+                            drug_info = api_drug_info
+                            break
 
                 if drug_info:
                     detailed_drug_info += f"\n### {drug_info.get('itemName', drug_name)}\n"
@@ -266,6 +294,10 @@ def display_model():
 
                     if drug_info.get('seQesitm'):
                         detailed_drug_info += f"- **부작용**: {drug_info['seQesitm'].strip()}\n"
+                else:
+                    # 약물 정보를 찾지 못한 경우
+                    detailed_drug_info += f"\n### {drug_name}\n"
+                    detailed_drug_info += f"- **정보**: 데이터베이스에서 상세 정보를 찾을 수 없습니다.\n"
 
         # 새로운 프롬프트
         prompt_content = f"""
