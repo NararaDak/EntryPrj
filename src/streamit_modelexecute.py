@@ -577,7 +577,10 @@ def display_model():
                                 # 세션에 저장 (초기화 방지)
                                 st.session_state["step1_result"] = step1_result
                             except Exception as e:
-                                st.error(f"GPT 분석 중 오류 발생: {e}")
+                                error_msg = str(e)
+                                st.error(f"GPT 분석 중 오류 발생: {error_msg}")
+                                if "401" in error_msg or "invalid_api_key" in error_msg or "Incorrect API key" in error_msg:
+                                    st.warning("OpenAI API 키가 올바르지 않거나 만료되었습니다. https://platform.openai.com/account/api-keys 에서 유효한 API 키를 확인해 주세요.")
 
                     # Step1 결과 표시
                     if "step1_result" in st.session_state:
