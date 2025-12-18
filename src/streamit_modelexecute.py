@@ -548,13 +548,18 @@ def display_model():
 
             # GPT 분석 부분
             if detected_drug_names:
-                # GPT API 키 입력창
-                API = st.text_input(
-                    "GPT API 키를 입력하세요",
-                    value= st.secrets["OPENAI_API_KEY"],
-                    type="password",
-                    help="OpenAI API 키를 입력해주세요",
-                )
+
+                # GPT API 키 입력창 (오류 처리 추가)
+                try:
+                    API = st.text_input(
+                        "GPT API 키를 입력하세요",
+                        value=st.secrets["OPENAI_API_KEY"],
+                        type="password",
+                        help="OpenAI API 키를 입력해주세요",
+                    )
+                except Exception as e:
+                    st.error(f"API 키를 불러오는 중 오류 발생: {e}")
+                    API = ""
 
                 if API:  # API 키가 입력된 경우에만 진행
                     client = OpenAI(api_key=API)
@@ -564,12 +569,15 @@ def display_model():
 
                     if st.button("1단계: 검출된 약물 분석 시작", type="primary"):
                         with st.spinner("GPT가 약물을 분석하는 중..."):
-                            # GPT Prompt step 1 : 검출 이미지 분석
-                            step1_result = create_drug_interaction_prompt_step1(
-                                client, detected_drug_names
-                            )
-                            # 세션에 저장 (초기화 방지)
-                            st.session_state["step1_result"] = step1_result
+                            try:
+                                # GPT Prompt step 1 : 검출 이미지 분석
+                                step1_result = create_drug_interaction_prompt_step1(
+                                    client, detected_drug_names
+                                )
+                                # 세션에 저장 (초기화 방지)
+                                st.session_state["step1_result"] = step1_result
+                            except Exception as e:
+                                st.error(f"GPT 분석 중 오류 발생: {e}")
 
                     # Step1 결과 표시
                     if "step1_result" in st.session_state:
