@@ -110,7 +110,7 @@ def display_model():
     if model_option == "기본 모델 사용":
         # model 폴더에서 .pt 파일 찾기
         model_dir = (
-            "./model"
+            "../model"  # EntryPrj/model 디렉토리를 가리킴
             # "/content/drive/MyDrive/Project-Team-1/data/yolo_results/yolov8n_train/weights" # Colab 부분
         )
 
