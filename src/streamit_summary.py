@@ -93,7 +93,7 @@ def display_summary_org():
 
 def display_summary():
     """PDF 리포트를 표시하는 함수"""
-    file = "Best_One_Team_project.pdf"
+    file = "./src/Best_One_Team_project.pdf"
     
     st.write("## 📄 프로젝트 리포트")
     
@@ -151,4 +151,5 @@ def display_summary():
         if os.path.exists(file):
 
             st.write(f"- 파일 크기: {os.path.getsize(file) / 1024:.2f} KB")
+
 
