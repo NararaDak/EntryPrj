@@ -60,6 +60,144 @@ def OpLog(log):
     except Exception as e:
         print(f"Log write error: {e}")
 
+from dataclasses import dataclass
+
+
+@dataclass
+class SubmissionItem:
+    image_id : int
+    category_id : int
+    bbox_x: int
+    bbox_y: int
+    bbox_w: int
+    bbox_h: int
+    score: float
+    dl_name : str
+
+@dataclass
+class Image_SubmissionItem:
+    SubmissionItem : list
+
+# CSV 파일에서 SubmissionItem 리스트 읽기
+def read_submission_csv(file_path,dl_mapping):
+    def get_dl_name(category_id):
+        if dl_mapping and category_id in dl_mapping:
+            return dl_mapping[category_id]
+        return "Unknown"
+
+    submission_items = []
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                item = SubmissionItem(
+                    image_id=int(row['image_id']),
+                    category_id=int(row['category_id']),
+                    bbox_x=int(row['bbox_x']),
+                    bbox_y=int(row['bbox_y']),
+                    bbox_w=int(row['bbox_w']),
+                    bbox_h=int(row['bbox_h']),
+                    score=float(row['score']),
+                    dl_name=get_dl_name(int(row['category_id']))
+                )
+                submission_items.append(item)
+        OpLog(f"Submission CSV 읽기 완료: {file_path} ({len(submission_items)}개 항목)")
+    except Exception as e:
+        OpLog(f"Submission CSV 읽기 오류 {file_path}: {e}")
+    return submission_items
+  
+# SubmissionItem 리스트를 이미지 ID별로 딕셔너리로 변환
+def change_submission2dict(submission_items):
+
+   
+
+    submission_dict = {}
+    for item in submission_items:
+        if item.image_id not in submission_dict:
+            submission_dict[item.image_id] = []
+        submission_dict[item.image_id].append(item)
+    return submission_dict
+
+# 이미지에 바운딩 박스 그리기
+def loop_submissionDict( submission_dict, image_path,save_path,score_bound =0.75):
+    for image_id, items in submission_dict.items():
+        draw_submissionBox(image_id,items, image_path, save_path, score_bound)
+# 이미지에 바운딩 박스 그리기
+def draw_submissionBox(image_id,SubmissionItems, image_path, save_path, score_bound=0.75):
+    try:
+        img = Image.open(os.path.join(image_path, f"{image_id}.png")).convert("RGB")
+        draw = ImageDraw.Draw(img)
+        bDraw = False
+        for item in SubmissionItems:
+            if item.score < score_bound:
+                bDraw = True
+                break
+        # score 0.75 미만인 항목이 없으면 그리지 않음
+        if not bDraw:
+            return 
+        
+        for item in SubmissionItems:
+            x, y, w, h = item.bbox_x, item.bbox_y, item.bbox_w, item.bbox_h
+            draw.rectangle([x, y, x + w, y + h], outline="red", width=2)
+            # category_id와 dl_name을 함께 표시
+            label = f"Cat:{item.category_id} {item.dl_name} ({item.score:.2f})"
+            draw.text((x, y - 18), label, fill="red")
+        makedirs(save_path)
+        img.save(os.path.join(save_path, f"{image_id}_boxed.png"))
+        OpLog(f"이미지 박스 그리기 완료: {image_id}.png")
+    except Exception as e:
+        OpLog(f"이미지 박스 그리기 오류 {image_id}.png: {e}")
+
+
+def make_dl_idx2dlname_mapping(annotation_dir):
+    """
+    어노테이션 디렉토리(annotation_dir) 하위의 모든 JSON 파일을 읽어
+    dl_idx와 dl_name의 매핑 딕셔너리를 생성하여 반환
+    Returns: {dl_idx: dl_name, ...}
+    """
+    # COCO 포맷의 JSON 파일에서 dl_idx/dl_name 또는 categories(id-name) 매핑 생성
+    dl_mapping = {}
+    if os.path.exists(annotation_dir):
+        for subdir in os.listdir(annotation_dir):
+            subdir_path = os.path.join(annotation_dir, subdir)
+            if os.path.isdir(subdir_path):
+                for class_dir in os.listdir(subdir_path):
+                    class_dir_path = os.path.join(subdir_path, class_dir)
+                    if os.path.isdir(class_dir_path):
+                        for json_file in os.listdir(class_dir_path):
+                            if json_file.endswith('.json'):
+                                json_path = os.path.join(class_dir_path, json_file)
+                                try:
+                                    with open(json_path, 'r', encoding='utf-8') as f:
+                                        data = json.load(f)
+                                    # 기존 방식: images 필드에서 dl_idx, dl_name 추출
+                                    if 'images' in data:
+                                        for img_info in data['images']:
+                                            dl_idx = img_info.get('dl_idx', None)
+                                            dl_name = img_info.get('dl_name', None)
+                                            if dl_idx is not None and dl_name is not None:
+                                                dl_mapping[dl_idx] = dl_name
+                                    # COCO categories 지원: categories 필드에서 id, name 추출
+                                    elif 'categories' in data:
+                                        for cat in data['categories']:
+                                            cat_id = cat.get('id', None)
+                                            cat_name = cat.get('name', None)
+                                            if cat_id is not None and cat_name is not None:
+                                                dl_mapping[cat_id] = cat_name
+                                except Exception as e:
+                                    OpLog(f"JSON 파일 읽기 오류 {json_path}: {e}")
+    return dl_mapping
+
+def Save_Submission_box():
+    submission_file = "./data/eda/submission20251212112431_ckeck.csv"
+    image_dir = "./data/oraldrug/test_images"
+    save_path = "./data/eda/submission0.75"
+    anntation_dir = "./data/eda/hap/train_annotations"
+    dl_mapping = make_dl_idx2dlname_mapping(anntation_dir)
+
+    submission_items = read_submission_csv(submission_file, dl_mapping)
+    submission_dict = change_submission2dict(submission_items)
+    loop_submissionDict(submission_dict, image_dir, save_path, score_bound=0.75)
 
 
 class DatasetInfo:
@@ -334,11 +472,11 @@ def visualize_mapping_statistics(dataset_info, img_to_json_mapping, json_to_img_
     
     # 2-1. 전체 통계 요약
     ax1 = plt.subplot(3, 3, 1)
-    summary_text = f"""전체 통계 요약
+    summary_text = f"""▣전체 통계 요약
     
-총 이미지: {total_images:,}개
-JSON 있는 이미지: {images_with_json:,}개
-JSON 없는 이미지: {images_with_no_json:,}개
+* 총 이미지: {total_images:,}개
+* JSON 있는 이미지: {images_with_json:,}개
+* JSON 없는 이미지: {images_with_no_json:,}개
 
 총 JSON: {total_jsons:,}개
 이미지 있는 JSON: {jsons_with_img:,}개
@@ -395,8 +533,8 @@ JSON 없는 이미지: {images_with_no_json:,}개
             ax4.text(bar.get_x() + bar.get_width()/2., height,
                     value_text, ha='center', va='bottom', fontsize=8)
     
-    ax4.set_xlabel('이미지당 JSON 개수', fontsize=10)
-    ax4.set_ylabel('이미지 수', fontsize=10)
+    ax4.set_xlabel('* 이미지당 JSON 개수', fontsize=10)
+    ax4.set_ylabel('* 이미지 수', fontsize=10)
     ax4.set_title('▶ 이미지당 JSON 개수 분포', fontsize=12, fontweight='bold', pad=10)
     ax4.grid(axis='y', alpha=0.3)
     
@@ -423,20 +561,20 @@ JSON 없는 이미지: {images_with_no_json:,}개
             ax5.text(bar.get_x() + bar.get_width()/2., height,
                     value_text, ha='center', va='bottom', fontsize=8)
     
-    ax5.set_xlabel('JSON당 이미지 개수', fontsize=10)
-    ax5.set_ylabel('JSON 수', fontsize=10)
+    ax5.set_xlabel('* JSON당 이미지 개수', fontsize=10)
+    ax5.set_ylabel('* JSON 수', fontsize=10)
     ax5.set_title('▶ JSON당 이미지 개수 분포', fontsize=12, fontweight='bold', pad=10)
     ax5.grid(axis='y', alpha=0.3)
     
     # 2-6. 이미지당 JSON 개수 상세 통계
     ax6 = plt.subplot(3, 3, 6)
     img_json_counts = list(img_json_count.values())
-    stats_text = f"""이미지당 JSON 개수 통계
+    stats_text = f"""▣ 이미지당 JSON 개수 통계
 
-최소: {min(img_json_counts)}개
-최대: {max(img_json_counts)}개
-평균: {sum(img_json_counts)/len(img_json_counts):.2f}개
-중앙값: {sorted(img_json_counts)[len(img_json_counts)//2]}개
+* 최소: {min(img_json_counts)}개
+* 최대: {max(img_json_counts)}개
+* 평균: {sum(img_json_counts)/len(img_json_counts):.2f}개
+* 중앙값: {sorted(img_json_counts)[len(img_json_counts)//2]}개
 
 분포:"""
     
@@ -451,12 +589,12 @@ JSON 없는 이미지: {images_with_no_json:,}개
     # 2-7. JSON당 이미지 개수 상세 통계
     ax7 = plt.subplot(3, 3, 7)
     json_img_counts = list(json_img_count.values())
-    stats_text = f"""JSON당 이미지 개수 통계
+    stats_text = f"""▣ JSON당 이미지 개수 통계
 
-최소: {min(json_img_counts)}개
-최대: {max(json_img_counts)}개
-평균: {sum(json_img_counts)/len(json_img_counts):.2f}개
-중앙값: {sorted(json_img_counts)[len(json_img_counts)//2]}개
+* 최소: {min(json_img_counts)}개
+* 최대: {max(json_img_counts)}개
+* 평균: {sum(json_img_counts)/len(json_img_counts):.2f}개
+* 중앙값: {sorted(json_img_counts)[len(json_img_counts)//2]}개
 
 분포 (상위 10개):"""
     
@@ -1162,9 +1300,11 @@ if __name__ == "__main__":
     # 이미지 및 어노테이션 디렉토리 경로 설정
     base_dir = r"D:\01.project\EntryPrj\data\eda"
     dataset_info = DatasetInfo(base_dir)
-    #img_to_json,json_to_img = MakeStatistic(dataset_info) # 통계 시각화 실행
-   # CopyOkImageOkJson(dataset_info=dataset_info,img_to_json_mapping=img_to_json)
-    CopyImageWithOnlyAnno(dataset_info=dataset_info)
-    #CopyAnnotionWithOnlyImage(dataset_info=dataset_info)
 
+    Save_Submission_box()
+
+    #img_to_json,json_to_img = MakeStatistic(dataset_info) # 통계 시각화 실행
+    #CopyOkImageOkJson(dataset_info=dataset_info,img_to_json_mapping=img_to_json)
+    CopyImageWithOnlyAnno(dataset_info=dataset_info)
+    CopyAnnotionWithOnlyImage(dataset_info=dataset_info)
 
