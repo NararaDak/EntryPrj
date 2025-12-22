@@ -27,7 +27,7 @@ st.markdown(
     }
     </style>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
 
 # ════════════════════════════════════════
@@ -39,7 +39,7 @@ st.markdown(
 
 # 1. 탭 제목 리스트를 정의합니다.
 
-tab_titles = ["프로제트개요","모델 연구","데이터 분석","EDA tool 시연", "모델 시연"]
+tab_titles = ["프로젝트개요", "모델 연구", "데이터 분석", "EDA tool 시연", "모델 시연"]
 
 # 2. st.tabs() 함수를 사용하여 탭을 생성합니다.
 tab1, tab2, tab3, tab4, tab5 = st.tabs(tab_titles)
@@ -65,7 +65,7 @@ with tab3:
 with tab4:
     st.header("EDA tool 시연 탭")
     try:
-        #streamit_eda.display_eda()
+        # streamit_eda.display_eda()
         streamit_edaexecute.display_eda()
     except Exception:
         st.info("streamit_edaexecute.py의 display_eda()를 구현하세요.")
