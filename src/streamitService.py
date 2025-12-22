@@ -39,10 +39,17 @@ st.markdown(
 
 # 1. 탭 제목 리스트를 정의합니다.
 
-tab_titles = ["프로젝트개요", "모델 연구", "데이터 분석", "EDA tool 시연", "모델 시연"]
+tab_titles = [
+    "프로젝트개요",
+    "모델 연구",
+    "데이터 분석",
+    "EDA tool 시연",
+    "모델 시연",
+    "모델 분석",
+]
 
 # 2. st.tabs() 함수를 사용하여 탭을 생성합니다.
-tab1, tab2, tab3, tab4, tab5 = st.tabs(tab_titles)
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(tab_titles)
 
 # 3. 각 탭 객체(tab1, tab2, tab3, tab4, tab5) 내부에 콘텐츠를 배치합니다.
 with tab1:
@@ -76,3 +83,10 @@ with tab5:
         streamit_modelexecute.display_model()
     except Exception:
         st.info("streamit_modelexecute.py의 display_model()를 구현하세요.")
+
+with tab6:
+    st.header("모델 분석 탭")
+    try:
+        streamit_submission.display_submission_study()
+    except Exception:
+        st.info("streamit_submission.py의 display_submission_study()를 구현하세요.")
