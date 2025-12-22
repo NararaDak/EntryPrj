@@ -46,7 +46,7 @@ tab_titles = [
     "데이터 분석",
     "EDA tool 시연",
     "모델 시연",
-    "모델 분석",
+    "테스트 결과 분석",
 ]
 
 # 2. st.tabs() 함수를 사용하여 탭을 생성합니다.
@@ -86,7 +86,7 @@ with tab5:
         st.info("streamit_modelexecute.py의 display_model()를 구현하세요.")
 
 with tab6:
-    st.header("모델 분석 탭")
+    st.header("테스트 결과 분석 탭")
     try:
         streamit_submission.display_submission_study()
     except Exception:
