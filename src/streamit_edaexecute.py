@@ -30,7 +30,6 @@ class MyData:
   ANNOTAION_ITEMS = None
   image_dir = None
   annotation_dir = None
-  draw_detail_type = 0
   
   # draw_detail_types : 0  목록 이미지 클릭, 1  전체 그리기 버튼, 2 선택 그리기 버튼,3 콤보박스 변경
   @staticmethod
@@ -150,8 +149,9 @@ class MyData:
         dl_idx=safe_dl_idx
       )
       if MyData.ANNOTAION_ITEMS is None:
-        MyData.ANNOTAION_ITEMS = []
+         MyData.ANNOTAION_ITEMS = []
       MyData.ANNOTAION_ITEMS.append(item)
+      # MyData.load_anotation(MyData.image_dir, MyData.annotation_dir)  # 다시 로드하여 정렬 등 처리
       st.success(f"Annotation 파일이 추가되었습니다: {json_path}")
     except Exception as e:
       st.error(f"Annotation 파일 추가 중 오류 발생: {e}")
@@ -558,37 +558,12 @@ def edit_annotation_byImage(image_file, annotation_dir=None):
                     save_clicked = btn3.button('저장', key=f'save_{selected_ann.annotation_file}')
                     add_clicked = btn4.button('추가', key=f'add_{selected_ann.annotation_file}')
                     delete_clicked = btn5.button('삭제', key=f'delete_{selected_ann.annotation_file}')
+
                     if draw_all_clicked:
-                        st.session_state[f'draw_clicked_{image_file}'] = True
-                        MyData.set_Dtail_Type(1)  # 전체 그리기 버튼
+                      draw_all_item(1, image_file, img_path, ann_candidates, img_placeholder)
                     elif draw_selected_clicked:
-                        st.session_state[f'draw_clicked_{image_file}'] = False
-                        MyData.set_Dtail_Type(2)  # 선택 그리기 버튼
-                        try:
-                            img = Image.open(img_path)
-                            draw_box_with_override(
-                                img,
-                                [selected_ann],
-                                image_file,
-                                selected_ann=selected_ann,
-                                override_bbox=[left, top, width_, height],
-                                width=450,
-                                placeholder=img_placeholder
-                            )
-                            ann_path = MyData.get_path_by_annotation_file(selected_ann.annotation_file)
-                            with open(ann_path, encoding='utf-8') as f:
-                                anno_data = json.load(f)
-                            dl_name = anno_data.get('dl_name')
-                            if not dl_name and 'images' in anno_data and anno_data['images']:
-                                dl_name = anno_data['images'][0].get('dl_name')
-                            category_id = None
-                            if 'annotations' in anno_data and anno_data['annotations']:
-                                ann0 = anno_data['annotations'][0]
-                                category_id = ann0.get('category_id', None)
-                            st.info(f"[선택 그리기] dl_name: {dl_name}")
-                            st.info(f"[선택 그리기] category_id: {category_id}")
-                        except Exception as e:
-                            st.error(f"선택 그리기 오류: {e}")
+                      draw_select_item(2, image_file, img_path, selected_ann, img_placeholder, left, top, width_, height)
+                    
                     elif save_clicked:
                         try:
                             left_f = float(left)
@@ -632,39 +607,80 @@ def edit_annotation_byImage(image_file, annotation_dir=None):
                             new_dl_idx = dl_idx_input
                             new_category_id = category_id_input
                             MyData.add_annotation_item(
-                                rel_image_file,
-                                new_bbox,
-                                new_dl_name,
-                                new_category_id,
-                                new_dl_idx
+                              rel_image_file,
+                              new_bbox,
+                              new_dl_name,
+                              new_category_id,
+                              new_dl_idx
                             )
                             MyData.set_Dtail_Type(1)  # 추가 후 전체 그리기
-                            # annotation 목록 업데이트
-                            ann_candidates = MyData.search_Item_by_image(rel_image_file)
-                            if ann_candidates:
-                                selected_ann = ann_candidates[-1]  # 마지막 추가된 항목 선택
-                                st.session_state[f'selected_ann_{image_file}'] = selected_ann
+                                      # # annotation 목록 업데이트 및 콤보박스 선택값 초기화
+                                      # st.session_state[f"anno_combo_{image_file}"] = None
+                                      # ann_candidates = MyData.search_Item_by_image(rel_image_file)
+                                      # if ann_candidates:
+                                      #   selected_ann = ann_candidates[-1]  # 마지막 추가된 항목 선택
+                                      #   st.session_state[f'selected_ann_{image_file}'] = selected_ann
+                            st.rerun()  # 페이지 새로고침
                         except Exception as e:
                             st.error(f"추가 오류: {e}")
                     elif delete_clicked:
-                      MyData.delete_annotation_item(selected_ann.annotation_file)
-                      MyData.set_Dtail_Type(1)  # 삭제 후 전체 그리기
-                      st.session_state[f'selected_ann_{image_file}'] = None
-                      st.warning(f"Annotation 파일이 삭제되었습니다: {selected_ann.annotation_file}")
-                      # annotation 목록 업데이트 및 콤보박스 강제 초기화
-                      ann_candidates = MyData.search_Item_by_image(rel_image_file)
-                      st.session_state[f"anno_combo_{image_file}"] = None  # 콤보박스 강제 초기화
-                      if ann_candidates:
-                        selected_ann = ann_candidates[0]
-                        st.session_state[f'selected_ann_{image_file}'] = selected_ann
-                      else:
+                        MyData.delete_annotation_item(selected_ann.annotation_file)
+                        MyData.set_Dtail_Type(1)  # 삭제 후 전체 그리기
                         st.session_state[f'selected_ann_{image_file}'] = None
+                        st.warning(f"Annotation 파일이 삭제되었습니다: {selected_ann.annotation_file}")
+                        st.rerun()  # 페이지 새로고침
             except Exception as e:
                 st.error(f"annotation 파일 읽기 오류: {e}\nann_labels: {ann_labels}\nselected_label: {selected_label}")
         else:
             st.warning("해당 이미지에 매칭되는 annotation 파일이 없습니다.")
 
+def draw_all_item(dType,image_file,img_path, ann_candidates, img_placeholder):
+  MyData.set_Dtail_Type(dType)  # 전체 그리기 버튼
+  st.session_state[f'draw_clicked_{image_file}'] = False
+  try:
+      img = Image.open(img_path)
+      draw_box_with_override(
+          img,
+          ann_candidates,
+          image_file,
+          width=450,
+          placeholder=img_placeholder
+      )
+  except Exception as e:
+      st.error(f"전체 그리기 오류: {e}")
 
+def draw_select_item(dType,image_file,img_path, selected_ann, img_placeholder,left, top, width_, height):
+  MyData.set_Dtail_Type(dType)  # 선택 그리기 버튼
+  st.session_state[f'draw_clicked_{image_file}'] = False
+  try:
+      img = Image.open(img_path)
+      draw_box_with_override(
+          img,
+          [selected_ann],
+          image_file,
+          selected_ann=selected_ann,
+          override_bbox=[left, top, width_, height],
+          width=450,
+          placeholder=img_placeholder
+      )
+      ann_path = MyData.get_path_by_annotation_file(selected_ann.annotation_file)
+      with open(ann_path, encoding='utf-8') as f:
+          anno_data = json.load(f)
+      dl_name = anno_data.get('dl_name')
+      if not dl_name and 'images' in anno_data and anno_data['images']:
+          dl_name = anno_data['images'][0].get('dl_name')
+      category_id = None
+      if 'annotations' in anno_data and anno_data['annotations']:
+          ann0 = anno_data['annotations'][0]
+          category_id = ann0.get('category_id', None)
+      if dType == 1:
+          st.info(f"[전체 그리기] dl_name: {dl_name}")
+          st.info(f"[전체 그리기] category_id: {category_id}")
+      elif dType == 2:
+        st.info(f"[선택 그리기] dl_name: {dl_name}")
+        st.info(f"[선택 그리기] category_id: {category_id}")
+  except Exception as e:
+      st.error(f"선택 그리기 오류: {e}")
 
 def display_train_image(rows=2, cols=2):
   # 학습 이미지 디렉토리의 이미지들을 표시하는 함수
