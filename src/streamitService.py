@@ -4,6 +4,7 @@ import streamit_modelStudy
 import streamit_edastudy
 import streamit_edaexecute
 import streamit_modelexecute
+import streamit_submission
 
 # 페이지 전체 레이아웃 및 폰트/탭 크기 스타일 적용
 st.set_page_config(layout="wide")
