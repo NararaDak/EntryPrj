@@ -696,7 +696,7 @@ def display_train_image(rows=2, cols=2):
             edit_annotation_byImage(selected_image)
         else:
             st.markdown('<div style="min-height:120px;"></div>', unsafe_allow_html=True)
-    st.write("### 학습 이미지 샘플02")
+    st.write("### 학습 이미지 샘플")
     images_per_page = rows * cols
     page = st.session_state.get('train_image_page', 0)
     show_files = MyData.serach_imge_files(page * images_per_page, images_per_page)
