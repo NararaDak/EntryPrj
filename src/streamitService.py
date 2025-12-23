@@ -56,22 +56,19 @@ tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(tab_titles)
 with tab1:
     streamit_summary.display_summary()
 
-with tab2:
-    st.header("모델 연구 탭")
+with tab2:1
     try:
         streamit_modelStudy.display_model_study()
     except Exception:
         st.info("streamit_modelStudy.py의 display_model_study()를 구현하세요.")
 
 with tab3:
-    st.header("데이터 분석 탭")
     try:
         streamit_edastudy.display_eda_study()
     except Exception:
         st.info("streamit_edastudy.py의 display_eda_study()를 구현하세요.")
 
 with tab4:
-    st.header("EDA tool 시연 탭")
     try:
         # streamit_eda.display_eda()
         streamit_edaexecute.display_eda()
@@ -79,14 +76,12 @@ with tab4:
         st.info("streamit_edaexecute.py의 display_eda()를 구현하세요.")
 
 with tab5:
-    st.header("모델 시연 탭")
     try:
         streamit_modelexecute.display_model()
-    except Exception:
+    excㅓpt Exception:
         st.info("streamit_modelexecute.py의 display_model()를 구현하세요.")
 
 with tab6:
-    st.header("테스트 결과 분석 탭")
     try:
         streamit_submission.display_submission_study()
     except Exception:
