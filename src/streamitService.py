@@ -6,7 +6,7 @@ import streamit_edaexecute
 import streamit_modelexecute
 import streamit_submission
 
-# 페이지 전체 레이아웃 및 폰트/탭 크기 스타일 적용
+## 페이지 전체 레이아웃 및 폰트/탭 크기 스타일 적용
 st.set_page_config(layout="wide")
 st.markdown(
     """
@@ -55,8 +55,7 @@ tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(tab_titles)
 # 3. 각 탭 객체(tab1, tab2, tab3, tab4, tab5) 내부에 콘텐츠를 배치합니다.
 with tab1:
     streamit_summary.display_summary()
-
-with tab2:1
+with tab2:
     try:
         streamit_modelStudy.display_model_study()
     except Exception:
@@ -70,7 +69,6 @@ with tab3:
 
 with tab4:
     try:
-        # streamit_eda.display_eda()
         streamit_edaexecute.display_eda()
     except Exception:
         st.info("streamit_edaexecute.py의 display_eda()를 구현하세요.")
@@ -78,7 +76,7 @@ with tab4:
 with tab5:
     try:
         streamit_modelexecute.display_model()
-    excㅓpt Exception:
+    except Exception:
         st.info("streamit_modelexecute.py의 display_model()를 구현하세요.")
 
 with tab6:
@@ -86,3 +84,4 @@ with tab6:
         streamit_submission.display_submission_study()
     except Exception:
         st.info("streamit_submission.py의 display_submission_study()를 구현하세요.")
+
