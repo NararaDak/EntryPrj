@@ -116,8 +116,8 @@ EntryPrj/
 
 ### 협업 일지
 
-- **김영욱**: 
-- **김효중**: [협업 일지](https://github.com/NararaDak/EntryPrj/blob/main/CollaborationLog/AI6기김영욱_초급프로젝트.pdf)
+- **김영욱**:  [협업 일지](https://github.com/NararaDak/EntryPrj/blob/main/CollaborationLog/AI6기김영욱_초급프로젝트.pdf)
+- **김효중**:
 - **장우정**: [협업 일지](https://www.notion.so/AI-6-1-2c32cc364d718029ae0bd7645c6e1fcf)
 - **최무영**:
 - **최지영**:
